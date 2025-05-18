@@ -1,38 +1,35 @@
-
 pipeline {
-    agent any
+  agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git 'https://your-repository-url.git'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    docker.build("todo-app")
-                }
-            }
-        }
-
-        stage('Push Docker Image to Docker Hub') {
-            steps {
-                script {
-                    docker.withRegistry('', 'docker-hub-credentials') {
-                        docker.image("todo-app").push("latest")
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    sh "kubectl apply -f k8s/deployment.yaml"
-                }
-            }
-        }
+  stages {
+    stage('Clone') {
+      steps {
+        git 'https://github.com/Naitik-ag/devops.git'
+      }
     }
+
+    stage('Build Docker Image') {
+      steps {
+        script {
+          dockerImage = docker.build("naitikag/todo-app:latest")
+        }
+      }
+    }
+
+    stage('Push Docker Image') {
+      steps {
+        script {
+          docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-credentials-id') {
+            dockerImage.push()
+          }
+        }
+      }
+    }
+
+    stage('Deploy to Kubernetes') {
+      steps {
+        sh 'kubectl apply -f deployment.yaml'
+      }
+    }
+  }
 }
